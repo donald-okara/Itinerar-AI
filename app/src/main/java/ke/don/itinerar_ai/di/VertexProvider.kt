@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 
 class VertexProviderImpl: VertexProvider {
     private val vertexAI = Firebase.ai
-    private val model = vertexAI.generativeModel("gemini-pro")
+    private val model = vertexAI.generativeModel(GEMINI_MODEL)
 
     override fun generateDescription(): Flow<GenerateContentResponse> {
         val responseStream = model.generateContentStream("Hi gemini")
@@ -21,6 +21,10 @@ class VertexProviderImpl: VertexProvider {
             Log.e("VertexAI", "Failed to generate content", e)
         }
 
+    }
+
+    companion object{
+        const val GEMINI_MODEL = "gemini-2.5-flash"
     }
 }
 
