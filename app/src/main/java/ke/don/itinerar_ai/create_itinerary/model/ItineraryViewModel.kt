@@ -3,6 +3,7 @@ package ke.don.itinerar_ai.create_itinerary.model
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import ke.don.itinerar_ai.di.DescriptionResult
 import ke.don.itinerar_ai.di.VertexProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,9 +44,43 @@ class ItineraryViewModel @Inject constructor(
 
     fun generateDescription() {
         viewModelScope.launch {
-            vertexProvider.generateDescription().map { it.text.orEmpty() }.collect {
-                updateDescription(it)
+            updateUiState(
+                _uiState.value.copy(
+                    isGeneratingDescription = true,
+                    descriptionIsError = false,
+                    descriptionErrorMessage = null,
+                    description = "" // optionally clear
+                )
+            )
+
+            uiState.value.title?.let {
+                vertexProvider.generateDescription(it).collect { result ->
+                    when (result) {
+                        is DescriptionResult.Loading -> {
+                            // Already handled above – ignore if redundant
+                        }
+
+                        is DescriptionResult.Success -> {
+                            // Append if you want streaming effect
+                            val updated = _uiState.value.description.orEmpty() + result.text
+                            updateUiState(_uiState.value.copy(description = updated))
+                        }
+
+                        is DescriptionResult.Error -> {
+                            updateUiState(
+                                _uiState.value.copy(
+                                    isGeneratingDescription = false,
+                                    descriptionIsError = true,
+                                    descriptionErrorMessage = result.message
+                                )
+                            )
+                        }
+                    }
+                }
             }
+
+            // ✅ Mark done after stream ends (and no error occurred)
+            updateUiState(_uiState.value.copy(isGeneratingDescription = false))
         }
     }
 

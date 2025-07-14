@@ -11,21 +11,29 @@ import kotlinx.coroutines.flow.map
 
 class VertexProviderImpl: VertexProvider {
     private val vertexAI = Firebase.ai
-    private val model = vertexAI.generativeModel("gemini-pro")
+    private val model = vertexAI.generativeModel(GEMINI_MODEL)
 
-    override fun generateDescription(): Flow<GenerateContentResponse> {
-        val responseStream = model.generateContentStream("Hi gemini")
+    override fun generateDescription(title: String): Flow<DescriptionResult> = flow {
+        emit(DescriptionResult.Loading)
 
+        val responseStream = model.generateContentStream("Hi Gemini, here is a title for a new itinerary: $title, please generate a description with max tokens $MAX_TOKENS")
 
-        return responseStream.catch { e ->
-            Log.e("VertexAI", "Failed to generate content", e)
+        responseStream.collect { chunk ->
+            emit(DescriptionResult.Success(chunk.text.orEmpty()))
         }
+    }.catch { e ->
+        Log.e("VertexAI", "🔥 Failed to generate content", e)
+        emit(DescriptionResult.Error(e.message ?: "Unknown error"))
+    }
 
+    companion object{
+        const val GEMINI_MODEL = "gemini-2.5-flash"
+        const val MAX_TOKENS = 100
     }
 }
 
 interface VertexProvider{
-    fun generateDescription(): Flow<GenerateContentResponse>
+    fun generateDescription(title: String): Flow<DescriptionResult>
 }
 
 sealed class DescriptionResult {

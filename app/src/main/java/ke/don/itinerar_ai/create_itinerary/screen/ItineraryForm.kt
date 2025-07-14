@@ -54,16 +54,25 @@ fun ItineraryForm(
             enabled = true,
             isError = false,
         )
-        FormTextField(
-            label = "Description",
-            placeholder = "Me and the gang blah blah",
-            onValueChange = {handleIntent(ItineraryIntentHandler.UpdateDescription(it))},
-            text = uiState.description.orEmpty(),
-            trailingIcon = Icons.Outlined.Lightbulb,
-            enabled = !uiState.isGeneratingDescription,
-            onClick = { handleIntent(ItineraryIntentHandler.GenerateDescription) },
-            isError = uiState.descriptionIsError,
-            errorMessage = uiState.descriptionErrorMessage
-        )
+
+        if (uiState.title?.isNotBlank() == true){
+            FormTextField(
+                label = "Description",
+                placeholder = " Start typing, or let AI write it for you.",
+                onValueChange = {handleIntent(ItineraryIntentHandler.UpdateDescription(it))},
+                text = uiState.description.orEmpty(),
+                trailingIcon = Icons.Outlined.Lightbulb,
+                enabled = !uiState.isGeneratingDescription,
+                onClick = { handleIntent(ItineraryIntentHandler.GenerateDescription) },
+                isError = uiState.descriptionIsError,
+                maxLength = 500,
+                nameLength = uiState.description?.length ?: 0,
+                showLength = true,
+                singleLine = false,
+                errorMessage = uiState.descriptionErrorMessage,
+                comment = if (uiState.isGeneratingDescription) "Generating..." else null
+            )
+        }
+
     }
 }
