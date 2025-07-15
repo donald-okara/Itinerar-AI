@@ -3,7 +3,6 @@
 **Itinerar-AI** is a lightweight AI demo app that showcases how large language models (like Gemini) can be used to generate, edit, and extend travel itineraries.
 It was built over two 4-hour days as an experiment in blending smart generation with a clean, Compose-driven UI.
 
----
 
 ## 🎯 What This Is
 
@@ -11,7 +10,6 @@ This is **not** a production travel app.
 It’s a **proof of concept**: a fast-built, opinionated prototype exploring how AI can be embedded into mobile user flows.
 It’s also a **starter template** for anyone looking to build an AI-powered Compose app with Firebase Vertex AI (Gemini).
 
----
 
 ## 🚀 What It Does
 
@@ -30,7 +28,6 @@ It’s also a **starter template** for anyone looking to build an AI-powered Com
 * 💡 **AI badges + transparency**
   AI-generated items are marked so you know what was suggested vs. typed.
 
----
 
 ## ⚙️ Stack
 
@@ -40,7 +37,6 @@ It’s also a **starter template** for anyone looking to build an AI-powered Com
 * **ViewModel + StateFlow**
 * **Kotlinx Serialization**
 
----
 
 ## 🛠️ Setup
 
@@ -67,7 +63,6 @@ To run Itinerar-AI locally:
    * The app should launch on an emulator or real device without additional config.
    * Errors like token or JSON failures may happen if the AI returns non-strict output.
 
----
 
 ## 🧪 Use as a Starter Template
 
@@ -82,7 +77,6 @@ You can clone this project as a **starter kit** with:
 
 Fork and build from here 🚀
 
----
 
 ## 📌 Notes
 
@@ -90,12 +84,9 @@ Fork and build from here 🚀
 * This app doesn't persist data (no DB or cloud sync).
 * No auth, no backend — everything runs locally except the Gemini calls.
 
----
-
 ## Credit
-The draggable Lazy column was adapted from [https://github.com/Artemake/Reordering-LazyColumn](Artemake)
+The draggable Lazy column was adapted from [Artemake](https://github.com/Artemake/Reordering-LazyColumn)
 
----
 ## 📄 License
 
 MIT – Free to clone, adapt, and remix.
