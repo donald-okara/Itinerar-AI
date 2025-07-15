@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +26,6 @@ import ke.don.itinerar_ai.create_itinerary.components.FormTextField
 import ke.don.itinerar_ai.create_itinerary.components.ItineraryList
 import ke.don.itinerar_ai.create_itinerary.model.ItineraryFormUiState
 import ke.don.itinerar_ai.create_itinerary.model.ItineraryIntentHandler
-import ke.don.itinerar_ai.create_itinerary.model.ItineraryItem
 import ke.don.itinerar_ai.create_itinerary.model.ItineraryViewModel
 
 
@@ -50,6 +50,8 @@ fun ItineraryForm(
     uiState: ItineraryFormUiState,
     handleIntent: (ItineraryIntentHandler) -> Unit,
 ){
+    val itineraryItemLength = uiState.itineraryItem?.title?.length ?: 0
+    val itineraryLengthError = itineraryItemLength > 250
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.Start,
@@ -83,11 +85,39 @@ fun ItineraryForm(
             comment = animatedGeneratingText(isActive = uiState.isGeneratingDescription)
         )
 
-        Button(
-            enabled = uiState.description?.isNotBlank() == true && !uiState.isGeneratingItinerary,
-            onClick = { handleIntent(ItineraryIntentHandler.GenerateItinerary) }
-        ) {
-            Text(text = "Generate Itinerary")
+        FormTextField(
+            label = "Itinerary Item",
+            placeholder = "Go to the mall.",
+            onValueChange = { handleIntent(ItineraryIntentHandler.UpdateItineraryText(it)) },
+            text = uiState.itineraryItem?.title.orEmpty(),
+            trailingIcon = Icons.Outlined.Check,
+            enabled = !itineraryLengthError,
+            onClick = {
+                if (uiState.itineraryItem?.id == null) handleIntent(ItineraryIntentHandler.AddItineraryItem)
+                else handleIntent(ItineraryIntentHandler.UpdateItineraryItem)
+            },
+            isError = itineraryLengthError,
+            maxLength = 250,
+            nameLength = itineraryItemLength,
+            showLength = true,
+            singleLine = false,
+            errorMessage = if(itineraryLengthError) "Itinerary title is too long" else null,
+        )
+
+        if (uiState.itinerary.isEmpty()){
+            Button(
+                enabled = uiState.description?.isNotBlank() == true && !uiState.isGeneratingItinerary,
+                onClick = { handleIntent(ItineraryIntentHandler.GenerateItinerary) }
+            ) {
+                Text(text = "Generate Itinerary")
+            }
+        }else{
+            Button(
+                enabled = uiState.description?.isNotBlank() == true && !uiState.isGeneratingItinerary,
+                onClick = { handleIntent(ItineraryIntentHandler.SuggestItineraryItems) }
+            ) {
+                Text(text = "Suggest changes")
+            }
         }
 
 

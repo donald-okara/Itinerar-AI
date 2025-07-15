@@ -24,7 +24,13 @@ class ItineraryViewModel @Inject constructor(
             is ItineraryIntentHandler.UpdateDescription -> updateDescription(intent.description)
             is ItineraryIntentHandler.GenerateDescription -> generateDescription()
             is ItineraryIntentHandler.GenerateItinerary -> generateItinerary()
+            is ItineraryIntentHandler.AddItineraryItem -> addItineraryItem()
+            is ItineraryIntentHandler.UpdateItineraryText -> updateItineraryText(intent.text)
+            is ItineraryIntentHandler.UpdateItineraryItem -> updateItineraryItem()
             is ItineraryIntentHandler.MoveItem -> moveItem(intent.fromIndex, intent.toIndex)
+            is ItineraryIntentHandler.RemoveItem -> removeItineraryItem(intent.item)
+            is ItineraryIntentHandler.EditItem -> editItem(intent.item)
+            ItineraryIntentHandler.SuggestItineraryItems -> suggestItineraryItems()
         }
     }
 
@@ -40,6 +46,59 @@ class ItineraryViewModel @Inject constructor(
 
     fun updateDescription(description: String) {
         updateUiState(_uiState.value.copy(description = description, descriptionIsError = description.length > 500, descriptionErrorMessage = if (description.length > 500) "Description is too long" else null))
+    }
+
+    fun editItem(item: ItineraryItem){
+        updateUiState(_uiState.value.copy(itineraryItem = item))
+    }
+
+    fun updateItineraryText(text: String) {
+        val itineraryItem = uiState.value.itineraryItem
+        updateUiState(_uiState.value.copy(itineraryItem = itineraryItem?.copy(title = text, isGenerated = false)))
+    }
+
+    fun addItineraryItem(){
+        val updatedList = _uiState.value.itinerary.toMutableList().apply {
+            add(ItineraryItem(
+                id = _uiState.value.itinerary.size.toString(),
+                title = _uiState.value.itineraryItem?.title.orEmpty(),
+                isLocked = true,
+            ))
+        }
+
+        updateUiState(
+            _uiState.value.copy(
+                itinerary = updatedList,
+                itineraryItem = null
+            )
+        )
+    }
+
+    fun updateItineraryItem(){
+        val itineraryItem = uiState.value.itineraryItem
+        val itineraryList = uiState.value.itinerary
+
+        val updatedList = itineraryList.map { existing ->
+            if (existing.id == itineraryItem?.id) itineraryItem else existing
+        }
+
+        updateUiState(
+            _uiState.value.copy(
+                itineraryItem = null,
+                itinerary = updatedList
+            )
+        )
+    }
+
+    fun removeItineraryItem(item: ItineraryItem){
+        val updatedList = uiState.value.itinerary - item
+
+        updateUiState(
+            _uiState.value.copy(
+                itinerary = updatedList,
+                itineraryItem = null
+            )
+        )
     }
 
     fun generateDescription() {
@@ -127,6 +186,80 @@ class ItineraryViewModel @Inject constructor(
             }
         }
     }
+
+    fun suggestItineraryItems(){
+        viewModelScope.launch {
+            updateUiState(
+                _uiState.value.copy(
+                    isGeneratingItinerary = true,
+                    itineraryIsError = false,
+                    itineraryErrorMessage = null
+                    )
+            )
+
+            val itinerary = uiState.value.itinerary
+            val title = uiState.value.title
+            val description = uiState.value.description
+
+            if (itinerary.isNotEmpty() && !title.isNullOrBlank() && !description.isNullOrBlank()) {
+                val result = vertexProvider.insertItineraryItems(
+                    title = title,
+                    description = description,
+                    itineraryList = itinerary
+                )
+
+                result.collect {
+                    when (it) {
+                        is GeminiResult.Loading -> {
+
+                        }
+                        is GeminiResult.Error -> {
+                            updateUiState(
+                                _uiState.value.copy(
+                                    isGeneratingItinerary = false,
+                                    itineraryIsError = true,
+                                    itineraryErrorMessage = "🔥 Failed to generate content"
+                                )
+                            )
+                        }
+                        is GeminiResult.Success -> {
+                            updateUiState(
+                                _uiState.value.copy(
+                                    isGeneratingItinerary = false
+                                )
+                            )
+
+                            insertSuggestedItems(it.data)
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+    fun insertSuggestedItems(suggestions: List<InsertionSuggestion>) {
+        val current = _uiState.value.itinerary.toMutableList()
+
+        // Sort by position to preserve correct ordering when inserting
+        suggestions.sortedBy { it.position }.forEach { suggestion ->
+            val position = suggestion.position.coerceIn(0, current.size)
+            current.add(position, suggestion.toItineraryItem())
+        }
+
+        updateUiState(_uiState.value.copy(itinerary = current))
+    }
+
+    // Optional: convert suggestion to regular item
+    private fun InsertionSuggestion.toItineraryItem(): ItineraryItem {
+        return ItineraryItem(
+            id = id,
+            title = title,
+            isGenerated = isGenerated,
+            isLocked = isLocked
+        )
+    }
+
 
     fun moveItem(fromIndex: Int, toIndex: Int) {
         val updatedList = _uiState.value.itinerary.toMutableList().apply {
