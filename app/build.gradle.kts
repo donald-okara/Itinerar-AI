@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.gms.google.services)
 }
@@ -52,6 +53,14 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
+    implementation(libs.androidx.foundation)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.firebase.appcheck.ktx)
+    implementation(libs.firebase.appcheck.playintegrity)
+    implementation(libs.firebase.appcheck.debug)
+
+
     ksp(libs.hilt.android.compiler)
     implementation(libs.bundles.hilt)
     implementation(libs.firebase.ai)
