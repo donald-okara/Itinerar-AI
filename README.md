@@ -3,12 +3,18 @@
 **Itinerar-AI** is a lightweight AI demo app that showcases how large language models (like Gemini) can be used to generate, edit, and extend travel itineraries.
 It was built over two 4-hour days as an experiment in blending smart generation with a clean, Compose-driven UI.
 
+### 🎥 Demo
+<video src="https://github.com/donald-okara/Itinerar-AI/Screen_recording_20250715_154208.mp4" controls width="100%" />
+
+Screen_recording_20250715_154208.mp4
 
 ## 🎯 What This Is
 
 This is **not** a production travel app.
 It’s a **proof of concept**: a fast-built, opinionated prototype exploring how AI can be embedded into mobile user flows.
 It’s also a **starter template** for anyone looking to build an AI-powered Compose app with Firebase Vertex AI (Gemini).
+
+
 
 
 ## 🚀 What It Does
