@@ -248,16 +248,31 @@ class ItineraryViewModel @Inject constructor(
             if (it.isGenerated) it.copy(isGenerated = false) else it
         }.toMutableList()
 
-        // Step 2: Insert new suggestions in the correct positions
-        suggestions.sortedBy { it.position }.forEach { suggestion ->
-            val position = suggestion.position.coerceIn(0, updatedList.size)
-            updatedList.add(position, suggestion.toItineraryItem())
+        // Step 2: Sort suggestions by intended position
+        val sorted = suggestions.sortedBy { it.position }
+
+        // Step 3: Insert suggestions with smart offset
+        var offset = 0
+        for (i in sorted.indices) {
+            val suggestion = sorted[i]
+            val insertPosition = (suggestion.position + offset).coerceIn(0, updatedList.size)
+            updatedList.add(insertPosition, suggestion.toItineraryItem())
+
+            // If this is the last one, skip comparison
+            if (i < sorted.lastIndex) {
+                val current = suggestion.position
+                val next = sorted[i + 1].position
+
+                // Only increment offset if the next is not consecutive
+                if (next != current + 1) {
+                    offset++
+                }
+            }
         }
 
-        // Step 3: Push new state
+        // Step 4: Push new state
         updateUiState(_uiState.value.copy(itinerary = updatedList))
     }
-
 
     // Optional: convert suggestion to regular item
     private fun InsertionSuggestion.toItineraryItem(): ItineraryItem {
