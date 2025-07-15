@@ -70,6 +70,7 @@ fun ItineraryList(
     LazyColumn(
         modifier = modifier
             .fillMaxWidth()
+            .height(800.dp)
             .dragContainer(dragDropState),
         state = stateList,
         contentPadding = PaddingValues(16.dp),

@@ -18,8 +18,8 @@ data class ItineraryFormUiState(
 
 @Serializable
 data class ItineraryItem(
-    val id: String,
-    val title: String,
+    val id: String? = null,
+    val title: String = "",
     val isLocked: Boolean = false,
     val isGenerated: Boolean = false,
 )

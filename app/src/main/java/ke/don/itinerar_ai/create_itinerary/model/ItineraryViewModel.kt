@@ -53,8 +53,9 @@ class ItineraryViewModel @Inject constructor(
     }
 
     fun updateItineraryText(text: String) {
-        val itineraryItem = uiState.value.itineraryItem
-        updateUiState(_uiState.value.copy(itineraryItem = itineraryItem?.copy(title = text, isGenerated = false)))
+        val currentItem = uiState.value.itineraryItem
+        val itineraryItem = if(currentItem == null) ItineraryItem() else currentItem
+        updateUiState(_uiState.value.copy(itineraryItem = itineraryItem.copy(title = text, isGenerated = false)))
     }
 
     fun addItineraryItem(){
@@ -78,16 +79,19 @@ class ItineraryViewModel @Inject constructor(
         val itineraryItem = uiState.value.itineraryItem
         val itineraryList = uiState.value.itinerary
 
-        val updatedList = itineraryList.map { existing ->
-            if (existing.id == itineraryItem?.id) itineraryItem else existing
+        itineraryItem?.let {
+            val updatedList = itineraryList.map { existing ->
+                if (existing.id == itineraryItem.id) itineraryItem else existing
+            }
+
+            updateUiState(
+                _uiState.value.copy(
+                    itineraryItem = null,
+                    itinerary = updatedList
+                )
+            )
         }
 
-        updateUiState(
-            _uiState.value.copy(
-                itineraryItem = null,
-                itinerary = updatedList
-            )
-        )
     }
 
     fun removeItineraryItem(item: ItineraryItem){
@@ -239,16 +243,21 @@ class ItineraryViewModel @Inject constructor(
     }
 
     fun insertSuggestedItems(suggestions: List<InsertionSuggestion>) {
-        val current = _uiState.value.itinerary.toMutableList()
+        // Step 1: Untoggle previous AI-generated flags
+        val updatedList = _uiState.value.itinerary.map {
+            if (it.isGenerated) it.copy(isGenerated = false) else it
+        }.toMutableList()
 
-        // Sort by position to preserve correct ordering when inserting
+        // Step 2: Insert new suggestions in the correct positions
         suggestions.sortedBy { it.position }.forEach { suggestion ->
-            val position = suggestion.position.coerceIn(0, current.size)
-            current.add(position, suggestion.toItineraryItem())
+            val position = suggestion.position.coerceIn(0, updatedList.size)
+            updatedList.add(position, suggestion.toItineraryItem())
         }
 
-        updateUiState(_uiState.value.copy(itinerary = current))
+        // Step 3: Push new state
+        updateUiState(_uiState.value.copy(itinerary = updatedList))
     }
+
 
     // Optional: convert suggestion to regular item
     private fun InsertionSuggestion.toItineraryItem(): ItineraryItem {
