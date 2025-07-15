@@ -3,20 +3,31 @@ package ke.don.itinerar_ai.create_itinerary.screen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ke.don.itinerar_ai.create_itinerary.components.FormTextField
+import ke.don.itinerar_ai.create_itinerary.components.ItineraryList
 import ke.don.itinerar_ai.create_itinerary.model.ItineraryFormUiState
 import ke.don.itinerar_ai.create_itinerary.model.ItineraryIntentHandler
+import ke.don.itinerar_ai.create_itinerary.model.ItineraryItem
 import ke.don.itinerar_ai.create_itinerary.model.ItineraryViewModel
+
 
 @Composable
 fun ItineraryApp(
@@ -55,24 +66,74 @@ fun ItineraryForm(
             isError = false,
         )
 
-        if (uiState.title?.isNotBlank() == true){
-            FormTextField(
-                label = "Description",
-                placeholder = " Start typing, or let AI write it for you.",
-                onValueChange = {handleIntent(ItineraryIntentHandler.UpdateDescription(it))},
-                text = uiState.description.orEmpty(),
-                trailingIcon = Icons.Outlined.Lightbulb,
-                enabled = !uiState.isGeneratingDescription,
-                onClick = { handleIntent(ItineraryIntentHandler.GenerateDescription) },
-                isError = uiState.descriptionIsError,
-                maxLength = 500,
-                nameLength = uiState.description?.length ?: 0,
-                showLength = true,
-                singleLine = false,
-                errorMessage = uiState.descriptionErrorMessage,
-                comment = if (uiState.isGeneratingDescription) "Generating..." else null
+        FormTextField(
+            label = "Description",
+            placeholder = " Start typing, or let AI write it for you.",
+            onValueChange = { handleIntent(ItineraryIntentHandler.UpdateDescription(it)) },
+            text = uiState.description.orEmpty(),
+            trailingIcon = Icons.Outlined.Lightbulb,
+            enabled = !uiState.isGeneratingDescription && uiState.title?.isNotBlank() == true,
+            onClick = { handleIntent(ItineraryIntentHandler.GenerateDescription) },
+            isError = uiState.descriptionIsError || uiState.title.isNullOrBlank(),
+            maxLength = 500,
+            nameLength = uiState.description?.length ?: 0,
+            showLength = true,
+            singleLine = false,
+            errorMessage = if(uiState.descriptionIsError) uiState.descriptionErrorMessage else if (uiState.title.isNullOrBlank() && uiState.description.isNullOrBlank()) "Title is required" else null,
+            comment = animatedGeneratingText(isActive = uiState.isGeneratingDescription)
+        )
+
+        Button(
+            enabled = uiState.description?.isNotBlank() == true && !uiState.isGeneratingItinerary,
+            onClick = { handleIntent(ItineraryIntentHandler.GenerateItinerary) }
+        ) {
+            Text(text = "Generate Itinerary")
+        }
+
+
+        Text(
+            text = animatedGeneratingText(
+                "Generating itinerary",
+                isActive = uiState.isGeneratingItinerary
+            ) ?: "",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.tertiary,
+            modifier = Modifier
+                .fillMaxWidth(),
+        )
+
+
+        if (uiState.itineraryIsError){
+            Text(
+                text = uiState.itineraryErrorMessage ?: "Something went wrong",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .fillMaxWidth(),
+            )
+        }
+
+
+        if (uiState.itinerary.isNotEmpty()) {
+            ItineraryList(
+                state = uiState,
+                handleIntent = handleIntent
             )
         }
 
     }
+}
+
+@Composable
+fun animatedGeneratingText(prefix: String = "Generating", isActive: Boolean): String? {
+    var dotCount by remember { mutableStateOf(0) }
+
+    LaunchedEffect(isActive) {
+        while (isActive) {
+            kotlinx.coroutines.delay(500)
+            dotCount = (dotCount + 1) % 4 // cycles from 0 to 3
+        }
+    }
+
+    return if (isActive) prefix + ".".repeat(dotCount) else null
 }
