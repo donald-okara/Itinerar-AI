@@ -96,7 +96,7 @@ The draggable Lazy column was adapted from [Artemake](https://github.com/Artemak
 
 MIT – Free to clone, adapt, and remix.
 
-####PS: 
+#### PS: 
 To access your SHA1 fingerprint for your project, paste this to your terminal
 
 `keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android`
